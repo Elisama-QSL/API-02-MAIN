@@ -11,7 +11,7 @@ module.exports = gql`
     from: String!
     to: String!
     value: Float!
-    date: String!
+    date: String!  
   }
 
   type AuthPayload {

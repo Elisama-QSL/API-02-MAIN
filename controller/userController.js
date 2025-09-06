@@ -12,7 +12,7 @@ router.post('/register', (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
-
+  
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Usuário e senha obrigatórios' });

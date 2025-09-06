@@ -10,7 +10,7 @@ module.exports = {
       if (!context.user) throw new Error('Autenticação obrigatória');
       return transferService.listTransfers();
     },
-  },
+  },  
   Mutation: {
     registerUser: (parent, { username, password, favorecidos }) => {
       return userService.registerUser({ username, password, favorecidos });

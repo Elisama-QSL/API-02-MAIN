@@ -12,7 +12,7 @@ const server = new ApolloServer({
   resolvers,
   context: ({ req }) => authenticate(req)
 });
-
+    
 async function startApolloServer() {
   await server.start();
   server.applyMiddleware({ app });

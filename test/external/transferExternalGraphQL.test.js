@@ -89,7 +89,5 @@ describe('Testes de Transferência', () => {
         expect(respostaTransferencia.status).to.equal(200);
         expect(respostaTransferencia.body.errors[0].message).to.equal('Saldo insuficiente para realizar a transferência');
 
-
-
     });
 });

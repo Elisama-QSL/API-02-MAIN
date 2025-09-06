@@ -1,93 +1,48 @@
-const  request  = require('supertest');
-const { expect } = require('chai');
+const request = require('supertest');
+const { expect, use } = require('chai');
+
+const chaiExclude = require('chai-exclude');
+use(chaiExclude);
 
 describe('Testes de Transferência', () => {
-    it('Validar que é possível transferur grana entre duas contas', async () => {
+    
+    before(async () => {
+        const loginUser = require('../fixture/requisicoes/login/loginUser.json');
         const resposta = await request('http://localhost:4000/graphql')
             .post('')
-            .send({
-                query: `
-                    mutation LoginUser($username: String!, $password: String!) {
-                        loginUser(username: $username, password: $password){
-                            token
-                        }
-                    }`,
-                variables: {
-                    username: 'julio',
-                    password: '123456'
-                }
-            });
-         //console.log(resposta.body.data.loginUser.token);
-         
-         const respostaTransferencia = await request('http://localhost:4000/graphql')
+            .send(loginUser);
+
+        token = resposta.body.data.loginUser.token;
+    });
+
+    beforeEach(() => {
+        createTransfer = require('../fixture/requisicoes/transferencia/createTransfer.json');
+    })
+    
+    it('Validar que é possível transferir grana entre duas contas', async () => {
+        const respostaEsperada = require('../fixture/respostas/transferencia/validarQueEPossivelTransferirGranaEntreDuasContas.json');
+
+        const respostaTransferencia = await request('http://localhost:4000/graphql')
             .post('')
-            .set('Authorization', `Bearer ${resposta.body.data.loginUser.token}`)
-            .send({
-                query: `
-                    mutation CreateTransfer($from: String!, $to: $to, $value: Float!) {
-                        createTransfer(from: $from, to: $to, value: $value) {
-                            date
-                            from
-                            to
-                            value
-                        }
-                    }                      
-                `,
-                variables: {
-                    from: 'julo',
-                    to: 'priscila',
-                    value: 15
-                }
-            });
+            .set('Authorization', `Bearer ${token}`)
+            .send(createTransfer);
 
-        expect(respostaTransferencia.status).to.equal(400);
-
-
+        expect(respostaTransferencia.status).to.equal(200);
+        expect(respostaTransferencia.body.data.createTransfer)
+            .excluding('date')
+            .to.deep.equal(respostaEsperada.data.createTransfer);
 
     });
 
+    it('Validar que não é possível transferir de uma conta que não possui saldo suficiente', async () => {
+        createTransfer.variables.value = 10000.01;
 
-
-     it('Saldo insuficiente', async () => {
-        const resposta = await request('http://localhost:4000/graphql')
+        const respostaTransferencia = await request('http://localhost:4000/graphql')
             .post('')
-            .send({
-                query: `
-                    mutation LoginUser($username: String!, $password: String!) {
-                        loginUser(username: $username, password: $password){
-                            token
-                        }
-                    }`,
-                variables: {
-                    username: 'julio',
-                    password: '123456'
-                }
-            });
-         //console.log(resposta.body.data.loginUser.token);
-         
-         const respostaTransferencia = await request('http://localhost:4000/graphql')
-            .post('')
-            .set('Authorization', `Bearer ${resposta.body.data.loginUser.token}`)
-            .send({
-                query: `
-                    mutation CreateTransfer($from: String!, $to: String!, $value: Float!) {
-                        createTransfer(from: $from, to: $to, value: $value) {
-                            date
-                            from
-                            to
-                            value
-                        }
-                    }                      
-                `,
-                variables: {
-                    from: 'julo',
-                    to: 'priscila',
-                    value: 10000.01
-                }
-            });
+            .set('Authorization', `Bearer ${token}`)
+            .send(createTransfer);
 
         expect(respostaTransferencia.status).to.equal(200);
-        expect(respostaTransferencia.body.errors[0].message).to.equal('Saldo insuficiente para realizar a transferência');
-
+        expect(respostaTransferencia.body.errors[0].message).to.equal('Saldo insuficiente');
     });
 });
